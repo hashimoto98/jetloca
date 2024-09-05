@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciamento de Máquinas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="login-container">
+    <h2>Login</h2>
+    <div id="login-error" style="color: red; display: none;"></div>
+    <form id="login-form">
+      <div>
+        <label for="username">Usuário:</label>
+        <input type="text" id="username" required>
+      </div>
+      <div>
+        <label for="password">Senha:</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="button" id="login-btn">Entrar</button>
+    </form>
+    <button type="button" id="show-register-btn">Registrar Novo Usuário</button>
+  </div>
+
+  <div id="register-container" style="display: none;">
+    <h2>Registrar Novo Usuário</h2>
+    <div id="register-error" style="color: red; display: none;"></div>
+    <form id="register-form">
+      <div>
+        <label for="register-username">Usuário:</label>
+        <input type="text" id="register-username" required>
+      </div>
+      <div>
+        <label for="register-password">Senha:</label>
+        <input type="password" id="register-password" required>
+      </div>
+      <div>
+        <label for="register-access">Nível de Acesso:</label>
+        <select id="register-access">
+          <option value="0">Visualização</option>
+          <option value="1">Criação e Edição</option>
+          <option value="2">Edição de Manutenções</option>
+        </select>
+      </div>
+      <button type="button" id="register-btn">Registrar</button>
+      <button type="button" id="cancel-register-btn">Cancelar</button>
+    </form>
+  </div>
+
+  <div id="machine-container" style="display: none;">
+    <div id="top-bar">
+      <div id="user-display">Usuário: </div>
+      <button id="logout-btn">Logout</button>
+    </div>
+
+    <h2>Lista de Máquinas</h2>
+    <table id="machine-list">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nome do Produto</th>
+          <th>Referência</th>
+          <th>Localização no Estoque</th>
+          <th>Observações</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- As máquinas serão listadas aqui dinamicamente pelo JavaScript -->
+      </tbody>
+    </table>
+
+    <div class="machine-form-container">
+      <form id="machine-form">
+        <input type="hidden" id="machine-id">
+        <div>
+          <label for="machine-cod">Código:</label>
+          <input type="text" id="machine-cod" required>
+        </div>
+        <div>
+          <label for="machine-product-name">Nome do Produto:</label>
+          <input type="text" id="machine-product-name" required>
+        </div>
+        <div>
+          <label for="machine-reference">Referência:</label>
+          <input type="text" id="machine-reference" required>
+        </div>
+        <div>
+          <label for="machine-stock-location">Localização no Estoque:</label>
+          <select id="machine-stock-location" required>
+            <option value="SS-Locação">SS-Locação</option>
+            <option value="SS-Manutenção">SS-Manutenção</option>
+            <option value="Ilha-Locação">Ilha-Locação</option>
+            <option value="Ilha-Manutenção">Ilha-Manutenção</option>
+            <option value="Fora de estoque">Fora de estoque</option>
+          </select>
+        </div>
+        <div>
+          <label for="machine-obs">Observações:</label>
+          <input type="text" id="machine-obs">
+        </div>
+        <button type="submit">Salvar Máquina</button>
+        <button type="button" id="cancel-machine-btn">Cancelar</button>
+      </form>
+    </div>
+  </div>
+  <div id="message-container" style="display: none; color: green;"></div>
+  <script src="script.js"></script>
+</body>
+</html>

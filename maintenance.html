@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manutenção da Máquina</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="maintenance-container">
+    <div id="top-bar">
+      <h2 id="machine-display">Manutenção - Máquina: </h2>
+      <button id="back-btn">Voltar</button>
+    </div>
+    <h2>Lista de Manutenções</h2>
+    <form id="maintenance-form">
+      <input type="text" id="contract" placeholder="Contrato">
+      <input type="text" id="problem" placeholder="Problema">
+      <input type="text" id="solution" placeholder="Solução">
+      <input type="datetime-local" id="date-time" placeholder="Data e Hora">
+      <input type="text" id="parts-used" placeholder="Peças Utilizadas">
+      <button type="submit">Adicionar Manutenção</button>
+    </form>
+    <table id="maintenance-list">
+      <thead>
+        <tr>
+          <th>Contrato</th>
+          <th>Problema</th>
+          <th>Solução</th>
+          <th>Data e Hora</th>
+          <th>Peças Utilizadas</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Linhas das manutenções serão adicionadas aqui -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
