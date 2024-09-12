@@ -7,37 +7,69 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="maintenance-container">
-    <div id="top-bar">
-      <h2 id="machine-display">Manutenção - Máquina: </h2>
-      <button id="back-btn">Voltar</button>
-    </div>
-    <h2>Lista de Manutenções</h2>
-    <form id="maintenance-form">
-      <input type="text" id="contract" placeholder="Contrato">
-      <input type="text" id="problem" placeholder="Problema">
-      <input type="text" id="solution" placeholder="Solução">
-      <input type="datetime-local" id="date-time" placeholder="Data e Hora">
-      <input type="text" id="parts-used" placeholder="Peças Utilizadas">
-      <button type="submit">Adicionar Manutenção</button>
-    </form>
-    <table id="maintenance-list">
-      <thead>
-        <tr>
-          <th>Contrato</th>
-          <th>Problema</th>
-          <th>Solução</th>
-          <th>Data e Hora</th>
-          <th>Peças Utilizadas</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Linhas das manutenções serão adicionadas aqui -->
-      </tbody>
-    </table>
+  <div id="top-bar">
+    <div id="user-display">Usuário: </div> 
+    <button id="logout-btn">Logout</button>
+    <h2 id="machine-display">Manutenção - Máquina: </h2>
+    <button id="back-btn">Voltar</button>
   </div>
-
-  <script src="script.js"></script>
+    <table id="maintenance-table">
+    <thead>
+      <tr>
+        <th>Data Inicial</th>
+        <th>Ordem de Serviço</th>
+        <th>Resumo/Descrição</th>
+        <th>Solução/Laudo</th>
+        <th>Data Final</th>
+        <th>Status</th>
+        <th>Ações</th> 
+      </tr>
+    </thead>
+    <tbody>
+      </tbody> 
+  </table>
+  <div id="maintenance-container">
+    <h2>Lista de Manutenções</h2>
+    <div class="maintenance-form-container"> 
+      <form id="maintenance-form">
+        <input type="hidden" id="maintenance-id">  <input type="hidden" id="maintenance-machine-id">  <div>
+          <label for="maintenance-contract">Contrato:</label>
+          <input type="text" id="maintenance-contract" name="contract" required>
+        </div>
+        <div>
+          <label for="maintenance-problem">Problema:</label>
+          <textarea id="maintenance-problem" name="problem" required></textarea>
+        </div>
+        <div>
+          <label for="maintenance-solution">Solução/Laudo:</label>
+          <textarea id="maintenance-solution" name="solution"></textarea>
+        </div>
+        <div>
+          <label for="maintenance-start-date">Data e Hora Inicial:</label>
+          <input type="datetime-local" id="maintenance-start-date" name="date" required>
+        </div>
+        <div>
+          <label for="maintenance-end-date">Data e Hora Final:</label>
+          <input type="datetime-local" id="maintenance-end-date" name="endDate">
+        </div>
+        <div>
+          <label for="maintenance-parts-used">Peças Utilizadas:</label>
+          <input type="text" id="maintenance-parts-used" name="partsUsed">
+        </div>
+        <div>
+          <label for="maintenance-status">Status:</label>
+          <select id="maintenance-status" name="status">
+            <option value="1">Inicial</option>
+            <option value="2">Aguardando peça</option>
+            <option value="3">Aguardando técnico</option>
+            <option value="4">Resolvido/Solucionado</option>
+          </select>
+        </div>
+        <button type="submit">Salvar Manutenção</button>
+        <button type="button" id="cancel-maintenance-btn">Cancelar</button>
+      </form>
+    </div> 
+  <script src="script.js"></script> 
+  <script src="maintenance.js"></script>
 </body>
 </html>

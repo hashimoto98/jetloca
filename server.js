@@ -207,27 +207,75 @@ app.post('/machines/:id/maintenances', checkAccessLevel(1), (req, res) => {
   });
 });
 
+// Rota para buscar uma máquina pelo 'cod'
+app.get('/machines/cod/:cod', checkAccessLevel(1), (req, res) => {
+  const machineCod = req.params.cod;
+
+  const query = 'SELECT * FROM machines WHERE cod = ?';
+  connection.query(query, [machineCod], (err, rows) => {
+    if (err) {
+      console.error('Erro ao buscar máquina:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Máquina não encontrada' });
+    }
+
+    const machine = rows[0];
+    res.status(200).json(machine); 
+  });
+});
+
 // Rota para editar uma máquina existente (somente usuários com nível de acesso >= 1)
 app.put('/machines/:id', checkAccessLevel(1), (req, res) => {
-  const machineId = req.params.id;
-  const { cod, productName, reference, stockLocation, obs } = req.body;
+  const machineId = req.params.id; 
+  const { cod: newCod, productName, reference, stockLocation, obs } = req.body;
 
-  if (!cod || !productName || !reference || !stockLocation) {
-    return res.status(400).json({ message: 'Todos os campos obrigatórios devem ser preenchidos' });
+  // Validação dos dados (incluindo o novo código)
+  if (!newCod || !productName || !reference || !stockLocation) {
+    return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos' });
   }
 
-  const updateQuery = 'UPDATE machines SET cod = ?, productName = ?, reference = ?, stockLocation = ?, obs = ? WHERE id = ?';
-  connection.query(updateQuery, [cod, productName, reference, stockLocation, obs, machineId], (err, result) => {
+  // Verificar se o novo 'cod' já existe em outra máquina (opcional)
+  const checkDuplicateCodQuery = 'SELECT * FROM machines WHERE cod = ? AND id != ?';
+  connection.query(checkDuplicateCodQuery, [newCod, machineId], (err, results) => {
     if (err) {
-      console.error('Erro ao atualizar máquina:', err);
-      return res.status(500).json({ message: 'Erro interno do servidor' });
-    }
-    
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Máquina não encontrada' });
+      console.error('Erro ao verificar duplicatas:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
     }
 
-    res.status(200).json({ message: 'Máquina atualizada com sucesso' });
+    if (results.length > 0) {
+      return res.status(400).json({ error: 'Código da máquina já existe' });
+    }
+
+    // Atualizar a máquina no banco de dados
+    const updateQuery = 'UPDATE machines SET cod = ?, productName = ?, reference = ?, stockLocation = ?, obs = ? WHERE id = ?';
+    connection.query(updateQuery, [newCod, productName, reference, stockLocation, obs, machineId], (err, result) => {
+      if (err) {
+        console.error('Erro ao atualizar máquina:', err);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Máquina não encontrada' });
+      }
+
+      // Buscar os dados atualizados da máquina (opcional)
+      const getUpdatedMachineQuery = 'SELECT * FROM machines WHERE id = ?';
+      connection.query(getUpdatedMachineQuery, [machineId], (err, rows) => {
+        if (err) {
+          console.error('Erro ao buscar máquina atualizada:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+
+        const updatedMachine = rows[0];
+        res.status(200).json({ 
+          message: 'Máquina atualizada com sucesso', 
+          machine: updatedMachine 
+        });
+      });
+    });
   });
 });
 
@@ -250,25 +298,132 @@ app.delete('/machines/:id', checkAccessLevel(1), (req, res) => {
   });
 });
 
-// Rota para editar manutenções (somente usuários com nível de acesso >= 2)
 app.put('/maintenances/:id', checkAccessLevel(2), (req, res) => {
   const maintenanceId = req.params.id;
   const { status, notes } = req.body;
 
-  if (!status) {
+  // Validação de dados
+  if (!status || status.trim() === '') {
     return res.status(400).json({ message: 'Status é obrigatório' });
+  }
+  if (notes && notes.length > 255) { // Exemplo de validação de tamanho máximo para 'notes'
+    return res.status(400).json({ message: 'Observações devem ter no máximo 255 caracteres' });
   }
 
   const query = 'UPDATE maintenances SET status = ?, notes = ? WHERE id = ?';
   connection.query(query, [status, notes, maintenanceId], (err, result) => {
     if (err) {
       console.error('Erro ao atualizar manutenção:', err);
-      return res.status(500).json({ message: 'Erro interno do servidor' });
+      if (err.code === 'ER_BAD_FIELD_ERROR') { // Exemplo de tratamento de erro específico
+        return res.status(400).json({ message: 'Campo inválido na requisição' });
+      } else {
+        return res.status(500).json({ message: 'Erro interno do servidor' });
+      }
     }
-    res.status(200).json({ message: 'Manutenção atualizada com sucesso' });
+
+    // Buscar os dados atualizados da manutenção (opcional)
+    connection.query('SELECT * FROM maintenances WHERE id = ?', [maintenanceId], (err, rows) => {
+      if (err) {
+        console.error('Erro ao buscar manutenção atualizada:', err);
+        return res.status(500).json({ message: 'Erro interno do servidor' });
+      }
+
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'Manutenção não encontrada' });
+      }
+
+      const updatedMaintenance = rows[0];
+      res.status(200).json({ 
+        message: 'Manutenção atualizada com sucesso', 
+        maintenance: updatedMaintenance 
+      });
+    });
+  });
+});
+//Listar as manutenções de uma maquina especifica
+app.get('/machines/:id/maintenances', (req, res) => {
+  const machineId = req.params.id;
+
+  const query = 'SELECT * FROM maintenances WHERE machine_id = ?';
+  connection.query(query, [machineId], (err, results) => {
+    if (err) {
+      console.error('Erro ao carregar manutenções:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+    res.status(200).json(results);
+  });
+});
+//Função de adcionar uma manutenção a maquina especifica
+app.post('/machines/:id/maintenances', checkAccessLevel(1), (req, res) => {
+  const machineId = req.params.id;
+  const { contract, problem, solution, date, endDate, partsUsed, status } = req.body;
+
+  // Verificar se os campos obrigatórios estão presentes
+  if (!contract || !problem || !date || !status) {
+    return res.status(400).json({ error: 'Campos obrigatórios para manutenção não foram preenchidos' });
+  }
+
+  // Query para inserir a manutenção no banco de dados
+  const insertQuery = `
+    INSERT INTO maintenances (machine_id, contract, problem, solution, date, end_date, parts_used, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  
+  connection.query(insertQuery, [machineId, contract, problem, solution, date, endDate, partsUsed, status], (err, result) => {
+    if (err) {
+      console.error('Erro ao adicionar manutenção:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+    res.status(201).json({ id: result.insertId, message: 'Manutenção adicionada com sucesso' });
   });
 });
 
+//Editar manutenção existente
+app.put('/maintenances/:id', checkAccessLevel(2), (req, res) => {
+  const maintenanceId = req.params.id;
+  const { maintenanceType, date, notes, solution, endDate, status } = req.body;
+
+  // Validação de dados (opcional, adicione mais validações conforme necessário)
+  if (!maintenanceType || !date || !status) {
+    return res.status(400).json({ error: 'Campos obrigatórios para manutenção não foram preenchidos' });
+  }
+
+  const updateQuery = `
+    UPDATE maintenances 
+    SET maintenance_type = ?, date = ?, notes = ?, solution = ?, end_date = ?, status = ? 
+    WHERE id = ?
+  `;
+  connection.query(updateQuery, [maintenanceType, date, notes, solution, endDate, status, maintenanceId], (err, result) => {
+    if (err) {
+      console.error('Erro ao atualizar manutenção:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Manutenção não encontrada' });
+    }
+
+    res.status(200).json({ message: 'Manutenção atualizada com sucesso' });
+  });
+});
+//Função para excluir uma manutenção
+app.delete('/maintenances/:id', checkAccessLevel(1), (req, res) => {
+  const maintenanceId = req.params.id;
+
+  const deleteQuery = 'DELETE FROM maintenances WHERE id = ?';
+  connection.query(deleteQuery, [maintenanceId], (err, result) => {
+    if (err) {
+      console.error('Erro ao excluir manutenção:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Manutenção não encontrada' });
+    }
+
+    res.status(200).json({ message: 'Manutenção excluída com sucesso' });
+  });
+});
 // Inicialização do servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
